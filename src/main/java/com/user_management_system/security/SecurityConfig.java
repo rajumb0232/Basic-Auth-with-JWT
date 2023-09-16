@@ -68,7 +68,7 @@ public class SecurityConfig {
 	 * 
 	 *         <p>
 	 *         The method returns SecurityFilterChain Object configured to
-	 *         formLogin.
+	 *         use JWT for session management.
 	 * 
 	 *         <p>
 	 *         The method takes {@link HttpSecurity} object as a method parameter It
