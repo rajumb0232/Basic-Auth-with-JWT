@@ -45,7 +45,6 @@ public class UserService {
 				new UsernamePasswordAuthenticationToken(authRequest.getUserEmail(), authRequest.getUserPassword()));
 		if (authentication.isAuthenticated()) {
 			String token = jwtService.generateToken(authRequest.getUserEmail());
-			System.out.println("Token = "+token);
 			return new ResponseEntity<AuthResponse>(new AuthResponse(token), HttpStatus.OK);
 		} else
 			throw new UserNameNotFoundException("Failed to Authenticate the user!!");
@@ -53,7 +52,6 @@ public class UserService {
 	}
 
 	public ResponseEntity<User> saveUser(UserRequest userRequest, String userRole) {
-
 		UserRole role = UserRole.valueOf(userRole.toUpperCase());
 		User user = User.builder().userName(userRequest.getUserName()).userEmail(userRequest.getUserEmail())
 				.userRole(role).userPassword(passwordEncoder.encode(userRequest.getUserPassword())).build();

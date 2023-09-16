@@ -61,12 +61,14 @@ public class JwtService {
 
 	private String createToken(Map<String, Object> claims, String userEmail) {
 		return Jwts.builder().setClaims(claims).setSubject(userEmail).setIssuedAt(new Date(System.currentTimeMillis()))
-				.setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 30))
+				.setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60))
 				.signWith(getLoginKey(), SignatureAlgorithm.HS256).compact();
 	}
 
+	/*
+	 * Methods to get LoginKey (secret-key)
+	 */
 	private Key getLoginKey() {
-		System.out.println(signInkey);
 		byte[] keyBytes = Decoders.BASE64.decode(signInkey);
 		return Keys.hmacShaKeyFor(keyBytes);
 	}

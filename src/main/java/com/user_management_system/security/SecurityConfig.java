@@ -86,7 +86,7 @@ public class SecurityConfig {
 	 *         Security.
 	 * 
 	 *         <p>
-	 *         The AuthenticationProvider can be configured to perform custom
+	 *         The AuthenticationProvider can further be configured to perform custom
 	 *         authentication by implemented using LDAP or OAuth.
 	 */
 	public AuthenticationProvider authenticationProvider() {
