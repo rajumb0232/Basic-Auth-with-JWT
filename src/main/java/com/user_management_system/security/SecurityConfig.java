@@ -47,7 +47,14 @@ public class SecurityConfig {
 	 * 
 	 *         <p>
 	 *         The method returns SecurityFilterChain Object configured to
-	 *         formLogin.
+	 *         formLogin. In a form based login security configuration, the
+	 *         AuthenticationManager is by default configured by the spring Security
+	 *         itself.
+	 * 
+	 *         <p>
+	 *         If any customized way of spring security like JWT has to be
+	 *         implemented, the the Bean of AuthenticationManager may require to
+	 *         customize the authentication process.
 	 * 
 	 *         <p>
 	 *         The method takes {@link HttpSecurity} object as a method parameter It
@@ -117,7 +124,8 @@ public class SecurityConfig {
 	 *         <p>
 	 *         The AuthenticationManager is the core component of Spring Security,
 	 *         responsible for authenticating the users based on the provided
-	 *         credentials.
+	 *         credentials.(A bean of AuthenticationManger is not required for the
+	 *         default authentication process using formLogin).
 	 * 
 	 *         <p>
 	 *         The AuthenticationManager Object can be obtained by
