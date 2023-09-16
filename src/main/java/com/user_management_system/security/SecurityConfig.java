@@ -67,8 +67,8 @@ public class SecurityConfig {
 	 * @return {@link SecurityFilterChain}
 	 * 
 	 *         <p>
-	 *         The method returns SecurityFilterChain Object configured to
-	 *         use JWT for session management.
+	 *         The method returns SecurityFilterChain Object configured to use JWT
+	 *         for session management.
 	 * 
 	 *         <p>
 	 *         The method takes {@link HttpSecurity} object as a method parameter It
@@ -112,6 +112,23 @@ public class SecurityConfig {
 		return authProvider;
 	}
 
+	/**
+	 * @return {@link AuthenticationManager}
+	 *         <p>
+	 *         The AuthenticationManager is the core component of Spring Security,
+	 *         responsible for authenticating the users based on the provided
+	 *         credentials.
+	 * 
+	 *         <p>
+	 *         The AuthenticationManager Object can be obtained by
+	 *         getAuthenticationManager() method of
+	 *         {@link AuthenticationConfiguration} class.
+	 * 
+	 *         <p>
+	 *         The AuthenticationConfiguration is a configuration class that helps
+	 *         in creating and managing the AuthenticationManager objects. It plays
+	 *         a significant role in customizing the authentication process.
+	 */
 	@Bean
 	AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfig) throws Exception {
 		return authenticationConfig.getAuthenticationManager();
