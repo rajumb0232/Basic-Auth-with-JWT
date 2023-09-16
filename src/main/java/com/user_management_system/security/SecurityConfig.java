@@ -5,20 +5,20 @@ import static org.springframework.security.config.Customizer.withDefaults;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
-
-import com.user_management_system.entity.User;
-import com.user_management_system.repository.UserRepo;
 
 /**
  * The class defines the Security Configurations to the application.
@@ -37,7 +37,10 @@ import com.user_management_system.repository.UserRepo;
 public class SecurityConfig {
 
 	@Autowired
-	private UserRepo repo;
+	private JwtAuthFilter jwtAuthFilter;
+
+	@Autowired
+	private UserDetailsService userDetailsService;
 
 	/**
 	 * @return {@link SecurityFilterChain}
@@ -47,13 +50,22 @@ public class SecurityConfig {
 	 *         defines the CSRF, RequestMatchers (the URLs) that has to be
 	 *         authenticated, and authorized and the logoutRequestMatcher.
 	 */
-	@Bean
+
 	SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception {
 		return httpSecurity.csrf(csrf -> csrf.disable())
 				.authorizeHttpRequests(auth -> auth.requestMatchers("/**").permitAll().anyRequest().authenticated())
 				.formLogin(withDefaults())
 				.logout(logout -> logout.logoutRequestMatcher(new AntPathRequestMatcher("/logout", "POST")).permitAll())
 				.build();
+	}
+
+	@Bean
+	SecurityFilterChain securityFilterChainWithJWT(HttpSecurity httpSecurity) throws Exception {
+		return httpSecurity.csrf(csrf -> csrf.disable())
+				.authorizeHttpRequests(auth -> auth.requestMatchers("/**").permitAll().anyRequest().authenticated())
+				.sessionManagement(management -> management.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+				.authenticationProvider(authenticationProvider())
+				.addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class).build();
 	}
 
 	/**
@@ -79,9 +91,14 @@ public class SecurityConfig {
 	 */
 	public AuthenticationProvider authenticationProvider() {
 		DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
-		authProvider.setUserDetailsService(getUserDetailsService());
+		authProvider.setUserDetailsService(userDetailsService);
 		authProvider.setPasswordEncoder(getPasswordEncoder());
 		return authProvider;
+	}
+
+	@Bean
+	AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfig) throws Exception {
+		return authenticationConfig.getAuthenticationManager();
 	}
 
 	/**
@@ -104,25 +121,6 @@ public class SecurityConfig {
 	@Bean
 	PasswordEncoder getPasswordEncoder() {
 		return new BCryptPasswordEncoder();
-	}
-
-	/**
-	 * @return {@link UserDetailsService}
-	 * 
-	 *         <p>
-	 *         The method uses findByUserEmail() method of {@link UserRepo} to get
-	 *         the User Credentials from the Database.
-	 */
-	@Bean
-	UserDetailsService getUserDetailsService() {
-		return userEmail -> {
-			User user = repo.findByUserEmail(userEmail);
-			if (user != null) {
-				return new CustomeUserDetail(user);
-			} else {
-				throw new UsernameNotFoundException("Failed to find the User!!");
-			}
-		};
 	}
 
 }
