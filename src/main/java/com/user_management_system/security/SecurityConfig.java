@@ -46,6 +46,10 @@ public class SecurityConfig {
 	 * @return {@link SecurityFilterChain}
 	 * 
 	 *         <p>
+	 *         The method returns SecurityFilterChain Object configured to
+	 *         formLogin.
+	 * 
+	 *         <p>
 	 *         The method takes {@link HttpSecurity} object as a method parameter It
 	 *         defines the CSRF, RequestMatchers (the URLs) that has to be
 	 *         authenticated, and authorized and the logoutRequestMatcher.
@@ -59,6 +63,18 @@ public class SecurityConfig {
 				.build();
 	}
 
+	/**
+	 * @return {@link SecurityFilterChain}
+	 * 
+	 *         <p>
+	 *         The method returns SecurityFilterChain Object configured to
+	 *         formLogin.
+	 * 
+	 *         <p>
+	 *         The method takes {@link HttpSecurity} object as a method parameter It
+	 *         defines the CSRF, RequestMatchers (the URLs) that has to be
+	 *         authenticated, and authorized and the logoutRequestMatcher.
+	 */
 	@Bean
 	SecurityFilterChain securityFilterChainWithJWT(HttpSecurity httpSecurity) throws Exception {
 		return httpSecurity.csrf(csrf -> csrf.disable())
@@ -86,8 +102,8 @@ public class SecurityConfig {
 	 *         Security.
 	 * 
 	 *         <p>
-	 *         The AuthenticationProvider can further be configured to perform custom
-	 *         authentication by implemented using LDAP or OAuth.
+	 *         The AuthenticationProvider can further be configured to perform
+	 *         custom authentication by implemented using LDAP or OAuth.
 	 */
 	public AuthenticationProvider authenticationProvider() {
 		DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
