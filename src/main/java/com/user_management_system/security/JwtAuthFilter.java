@@ -3,20 +3,14 @@ package com.user_management_system.security;
 import java.io.IOException;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
-import org.springframework.web.ErrorResponse;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
-import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -39,23 +33,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 		String userName = null;
 		if (authHeader != null && authHeader.startsWith("Bearer ")) {
 			token = authHeader.substring(7);
-//			try {
 				userName = jwtService.extractUsername(token);
-//			}catch (ExpiredJwtException e) {
-////				FilterErrorResponse errorResponse = new FilterErrorResponse(e);
-////				shouldNotFilterErrorDispatch();
-////	            response.setStatus(HttpStatus.BAD_REQUEST.value());
-//////	            response.getWriter().write(convertObjectToJson(errorResponse));
-////	            throw new CustomJwtExpiredException("Failed to Authenticate the User!!");
-//	            
-//
-//	            // custom error response class used across my project
-//	            ErrorResponse errorResponse = new 
-//
-//	            response.setStatus(HttpStatus.INTERNAL_SERVER_ERROR.value());
-//	            response.getWriter().write(convertObjectToJson(errorResponse));
-//			}
-				
 		}
 		if (userName != null && SecurityContextHolder.getContext().getAuthentication() == null) {
 			UserDetails userDetails = userDetailsService.loadUserByUsername(userName);
@@ -69,11 +47,4 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 		filterChain.doFilter(request, response);
 	}
 	
-	private String convertObjectToJson(Object object) throws JsonProcessingException {
-        if (object == null) {
-            return null;
-        }
-        ObjectMapper mapper = new ObjectMapper();
-        return mapper.writeValueAsString(object);
-    }
 }
