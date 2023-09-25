@@ -1,5 +1,6 @@
 package com.user_management_system.service;
 
+import java.util.Date;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,10 +14,16 @@ import org.springframework.stereotype.Service;
 
 import com.user_management_system.dto.AuthRequest;
 import com.user_management_system.dto.AuthResponse;
+import com.user_management_system.dto.RefreshTokenRequest;
 import com.user_management_system.dto.UserRequest;
+import com.user_management_system.entity.RefreshToken;
 import com.user_management_system.entity.User;
 import com.user_management_system.entity.UserRole;
+import com.user_management_system.exception.InvalidRefreshTokenException;
+import com.user_management_system.exception.RefreshTokenExpiredException;
 import com.user_management_system.exception.UserNameNotFoundException;
+import com.user_management_system.exception.UserNotFoundWithRefreshTokenException;
+import com.user_management_system.repository.RefreshTokenRepo;
 import com.user_management_system.repository.UserRepo;
 import com.user_management_system.security.JwtService;
 
@@ -32,6 +39,8 @@ public class UserService {
 	private UserRepo userRepo;
 
 	@Autowired
+	private RefreshTokenRepo tokenRepo;
+	@Autowired
 	private PasswordEncoder passwordEncoder;
 
 	@Autowired
@@ -40,15 +49,66 @@ public class UserService {
 	@Autowired
 	private AuthenticationManager authenticationManager;
 
+	/**
+	 * 
+	 * @param authRequest
+	 * @return {@link AuthResponse}
+	 *         <p>
+	 *         The method checks whether the user is authenticated or not
+	 * 
+	 *         <p>
+	 *         {@code Authentication authentication = authenticationManager.authenticate(
+				new UsernamePasswordAuthenticationToken(authRequest.getUserEmail(), authRequest.getUserPassword()));}
+	 * 
+	 *         <p>
+	 *         If authenticated returns the token as AuthResponse to the use, If not
+	 *         authenticated throws {@link UserNameNotFoundException}
+	 */
 	public ResponseEntity<AuthResponse> getAuthenticatedToken(AuthRequest authRequest) {
 		Authentication authentication = authenticationManager.authenticate(
 				new UsernamePasswordAuthenticationToken(authRequest.getUserEmail(), authRequest.getUserPassword()));
 		if (authentication.isAuthenticated()) {
 			String token = jwtService.generateToken(authRequest.getUserEmail());
-			return new ResponseEntity<AuthResponse>(new AuthResponse(token), HttpStatus.OK);
+			RefreshToken refreshToken = jwtService.GenerateRefreshToken();
+			User user = userRepo.findByUserEmail(authentication.getName());
+			validateAndAddRefreshTokenToUser(refreshToken, user);
+			return new ResponseEntity<AuthResponse>(new AuthResponse(token, refreshToken.getRefreshToken()),
+					HttpStatus.OK);
 		} else
 			throw new UserNameNotFoundException("Failed to Authenticate the user!!");
 
+	}
+
+	private void validateAndAddRefreshTokenToUser(RefreshToken refreshToken, User user) {
+		RefreshToken exRefreshToken = user.getRefreshToken();
+		// add new token to user if token is null, if present update.
+		if (exRefreshToken == null) {
+			user.setRefreshToken(refreshToken);
+			refreshToken = tokenRepo.save(refreshToken);
+			userRepo.save(user);
+		} else {
+			refreshToken.setTokenId(exRefreshToken.getTokenId());
+			refreshToken = tokenRepo.save(refreshToken);
+		}
+	}
+
+	public ResponseEntity<AuthResponse> refreshToken(RefreshTokenRequest refreshToken) {
+		RefreshToken exToken = tokenRepo.findByRefreshToken(refreshToken.getRefreshToken());
+		if (exToken != null) {
+			if (exToken.getExpiration().compareTo(new Date(System.currentTimeMillis())) < 0) {
+				User user = userRepo.findByRefreshToken(exToken);
+				if (user != null) {
+					String token = jwtService.generateToken(user.getUserEmail());
+					RefreshToken newRefreshToken = jwtService.GenerateRefreshToken();
+					validateAndAddRefreshTokenToUser(newRefreshToken, user);
+					return new ResponseEntity<AuthResponse>(new AuthResponse(token, newRefreshToken.getRefreshToken()),
+							HttpStatus.OK);
+				} else
+					throw new UserNotFoundWithRefreshTokenException("Failed to refresh Access Token.");
+			} else
+				throw new RefreshTokenExpiredException("Failed to refresh Access Token.");
+		} else
+			throw new InvalidRefreshTokenException("Failed to refresh Access Token.");
 	}
 
 	public ResponseEntity<User> saveUser(UserRequest userRequest, String userRole) {

@@ -112,7 +112,11 @@ public class SecurityConfig {
 	 *         The AuthenticationProvider can further be configured to perform
 	 *         custom authentication by implemented using LDAP or OAuth.
 	 */
-	public AuthenticationProvider authenticationProvider() {
+	@Bean /*
+			 * It also works if not annotated with Bean, because the bean is not called
+			 * anywhere outside in the class.
+			 */
+	AuthenticationProvider authenticationProvider() {
 		DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
 		authProvider.setUserDetailsService(userDetailsService);
 		authProvider.setPasswordEncoder(getPasswordEncoder());
