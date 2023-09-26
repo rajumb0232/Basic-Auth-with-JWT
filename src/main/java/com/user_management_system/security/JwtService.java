@@ -18,7 +18,9 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Service
 public class JwtService {
 
@@ -33,6 +35,7 @@ public class JwtService {
 	}
 
 	public <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
+		log.info("Extracting Claims from JWT.");
 		final Claims claims = Jwts.parserBuilder().setSigningKey(getLoginKey()).build().parseClaimsJws(token).getBody();
 		return claimsResolver.apply(claims);
 	}
@@ -46,6 +49,7 @@ public class JwtService {
 	}
 
 	public Boolean validateToken(String token, UserDetails userDetails) {
+		log.info("Validating the token.");
 		final String username = extractUsername(token);
 		return (username.equals(userDetails.getUsername()) && !isTokenExpired(token));
 	}
@@ -69,6 +73,7 @@ public class JwtService {
 	}
 
 	private String createToken(Map<String, Object> claims, String userEmail) {
+		log.info("Generating Access Token.");
 		return Jwts.builder().setClaims(claims).setSubject(userEmail).setIssuedAt(new Date(System.currentTimeMillis()))
 				.setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 3))
 				.signWith(getLoginKey(), SignatureAlgorithm.HS256).compact();
@@ -78,6 +83,7 @@ public class JwtService {
 	 * Method to Generate Refresh Token
 	 */
 	public RefreshToken GenerateRefreshToken() {
+		log.info("Generating Refresh Token.");
 		String token = UUID.randomUUID().toString();
 
 		RefreshToken refreshToken = new RefreshToken();

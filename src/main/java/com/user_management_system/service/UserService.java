@@ -29,7 +29,9 @@ import com.user_management_system.security.JwtService;
 
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Service
 @AllArgsConstructor
 @NoArgsConstructor
@@ -65,6 +67,7 @@ public class UserService {
 	 *         authenticated throws {@link UserNameNotFoundException}
 	 */
 	public ResponseEntity<AuthResponse> getAuthenticatedToken(AuthRequest authRequest) {
+		log.info("Authentication request.");
 		Authentication authentication = authenticationManager.authenticate(
 				new UsernamePasswordAuthenticationToken(authRequest.getUserEmail(), authRequest.getUserPassword()));
 		if (authentication.isAuthenticated()) {
@@ -80,6 +83,7 @@ public class UserService {
 	}
 
 	private void validateAndAddRefreshTokenToUser(RefreshToken refreshToken, User user) {
+		log.info("Updatiing user Refersh Token.");
 		RefreshToken exRefreshToken = user.getRefreshToken();
 		// add new token to user if token is null, if present update.
 		if (exRefreshToken == null) {
@@ -93,6 +97,7 @@ public class UserService {
 	}
 
 	public ResponseEntity<AuthResponse> refreshToken(RefreshTokenRequest refreshToken) {
+		log.info("Requested to refreshing user Access Token.");
 		RefreshToken exToken = tokenRepo.findByRefreshToken(refreshToken.getRefreshToken());
 		if (exToken != null) {
 			if (exToken.getExpiration().compareTo(new Date(System.currentTimeMillis())) < 0) {

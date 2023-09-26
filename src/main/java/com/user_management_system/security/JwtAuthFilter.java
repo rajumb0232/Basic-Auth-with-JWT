@@ -38,6 +38,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 	@Override
 	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
 			throws ServletException, IOException {
+		log.info("Authorizing the user.");
 		String authHeader = request.getHeader("Authorization");
 		String token = null;
 		String userName = null;
@@ -47,16 +48,14 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 					userName = jwtService.extractUsername(token);
 			}
 			if (userName != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-				System.err.println("loadUserByUserName() is called!!");
+				log.info("Authorizing User.");
 				UserDetails userDetails = userDetailsService.loadUserByUsername(userName);
-				System.err.println("Checking if the token is valid for the userDetails returned by userService!!");
 				if (jwtService.validateToken(token, userDetails)) {
-					System.err.println("Getting the authorities using UsernamePasswordAuthenticationToken!!");
 					UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(userName,null,
 							userDetails.getAuthorities());
-					System.err.println("setting the request details to the authToken!!");
 					authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 					SecurityContextHolder.getContext().setAuthentication(authToken);
+					log.info("User successfully authenticated.");
 				}
 			}
 		} catch (ExpiredJwtException e) {
