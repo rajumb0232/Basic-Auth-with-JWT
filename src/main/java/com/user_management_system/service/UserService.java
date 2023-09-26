@@ -67,7 +67,7 @@ public class UserService {
 	 *         authenticated throws {@link UserNameNotFoundException}
 	 */
 	public ResponseEntity<AuthResponse> getAuthenticatedToken(AuthRequest authRequest) {
-		log.info("Authentication request.");
+		log.info("Authenticating request...");
 		Authentication authentication = authenticationManager.authenticate(
 				new UsernamePasswordAuthenticationToken(authRequest.getUserEmail(), authRequest.getUserPassword()));
 		if (authentication.isAuthenticated()) {
@@ -75,6 +75,7 @@ public class UserService {
 			RefreshToken refreshToken = jwtService.GenerateRefreshToken();
 			User user = userRepo.findByUserEmail(authentication.getName());
 			validateAndAddRefreshTokenToUser(refreshToken, user);
+			log.info("User updated with new Refersh and Access Token!");
 			return new ResponseEntity<AuthResponse>(new AuthResponse(token, refreshToken.getRefreshToken()),
 					HttpStatus.OK);
 		} else
@@ -83,7 +84,7 @@ public class UserService {
 	}
 
 	private void validateAndAddRefreshTokenToUser(RefreshToken refreshToken, User user) {
-		log.info("Updatiing user Refersh Token.");
+		log.info("Updating user Refersh Token...");
 		RefreshToken exRefreshToken = user.getRefreshToken();
 		// add new token to user if token is null, if present update.
 		if (exRefreshToken == null) {
@@ -97,15 +98,16 @@ public class UserService {
 	}
 
 	public ResponseEntity<AuthResponse> refreshToken(RefreshTokenRequest refreshToken) {
-		log.info("Requested to refreshing user Access Token.");
+		log.info("Requested to refresh the user Access Token...");
 		RefreshToken exToken = tokenRepo.findByRefreshToken(refreshToken.getRefreshToken());
 		if (exToken != null) {
-			if (exToken.getExpiration().compareTo(new Date(System.currentTimeMillis())) < 0) {
+			if (exToken.getExpiration().compareTo(new Date(System.currentTimeMillis())) >= 0) {
 				User user = userRepo.findByRefreshToken(exToken);
 				if (user != null) {
 					String token = jwtService.generateToken(user.getUserEmail());
 					RefreshToken newRefreshToken = jwtService.GenerateRefreshToken();
 					validateAndAddRefreshTokenToUser(newRefreshToken, user);
+					log.info("User updated with new Refersh and Access Token!");
 					return new ResponseEntity<AuthResponse>(new AuthResponse(token, newRefreshToken.getRefreshToken()),
 							HttpStatus.OK);
 				} else
@@ -117,10 +119,12 @@ public class UserService {
 	}
 
 	public ResponseEntity<User> saveUser(UserRequest userRequest, String userRole) {
+		log.info("New registration request...");
 		UserRole role = UserRole.valueOf(userRole.toUpperCase());
 		User user = User.builder().userName(userRequest.getUserName()).userEmail(userRequest.getUserEmail())
 				.userRole(role).userPassword(passwordEncoder.encode(userRequest.getUserPassword())).build();
-		userRepo.save(user);
+		user = userRepo.save(user);
+		log.info("User sign-up successful!");
 		return new ResponseEntity<User>(user, HttpStatus.CREATED);
 	}
 

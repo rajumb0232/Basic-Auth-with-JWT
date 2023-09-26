@@ -38,7 +38,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 	@Override
 	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
 			throws ServletException, IOException {
-		log.info("Authorizing the user.");
+		log.info("Authenticating the user...");
 		String authHeader = request.getHeader("Authorization");
 		String token = null;
 		String userName = null;
@@ -48,14 +48,13 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 					userName = jwtService.extractUsername(token);
 			}
 			if (userName != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-				log.info("Authorizing User.");
 				UserDetails userDetails = userDetailsService.loadUserByUsername(userName);
 				if (jwtService.validateToken(token, userDetails)) {
 					UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(userName,null,
 							userDetails.getAuthorities());
 					authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 					SecurityContextHolder.getContext().setAuthentication(authToken);
-					log.info("User successfully authenticated.");
+					log.info("User successfully authenticated!");
 				}
 			}
 		} catch (ExpiredJwtException e) {
